@@ -1,16 +1,14 @@
 package br.com.estoque.application;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Scanner;
 
-import br.com.estoque.dao.ItemDAO;
+import br.com.estoque.service.ItemService;
 import br.com.model.Item;
 
 public class Main {
-
     public static void main(String[] args) {
-        ItemDAO itemDao = new ItemDAO("items");
+        ItemService itemService = new ItemService(); // Agora usamos o serviço para intermediar operações
         Scanner sc = new Scanner(System.in);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -27,14 +25,14 @@ public class Main {
             System.out.println("5 - Encerrar");
             System.out.print("Resposta: ");
 
-            if (!sc.hasNextInt()) {  // Verifica se a entrada é um número inteiro válido
-                System.out.println("Entrada inválida! Por favor, digite um número entre 1 e 5.");
-                sc.nextLine(); // Descarta entrada inválida
-                continue; // Volta para o menu
+            if (!sc.hasNextInt()) {
+                System.out.println("Entrada inválida! Digite um número entre 1 e 5.");
+                sc.nextLine();
+                continue;
             }
 
             int resposta = sc.nextInt();
-            sc.nextLine(); // Consumir o newline deixado pelo nextInt()
+            sc.nextLine();
             System.out.println();
 
             try {
@@ -44,7 +42,7 @@ public class Main {
                         String nome = sc.nextLine();
 
                         System.out.print("Quantidade: ");
-                        if (!sc.hasNextInt()) {  // Verifica se a entrada é um número válido
+                        if (!sc.hasNextInt()) {
                             System.out.println("Entrada inválida! A quantidade deve ser um número inteiro.");
                             sc.nextLine();
                             continue;
@@ -52,16 +50,12 @@ public class Main {
                         int quantidade = sc.nextInt();
                         sc.nextLine();
 
-                        Item novoItem = new Item();
-                        novoItem.setNome(nome);
-                        novoItem.setQuantidade(quantidade);
-                        novoItem.setDataCadastro(new Date());
-                        itemDao.save(novoItem);
+                        itemService.salvarItem(nome, quantidade);
                         break;
 
                     case 2:
                         System.out.print("Informe o ID do item a ser removido: ");
-                        if (!sc.hasNextInt()) {  // Verifica se o ID é um número válido
+                        if (!sc.hasNextInt()) {
                             System.out.println("Entrada inválida! O ID deve ser um número inteiro.");
                             sc.nextLine();
                             continue;
@@ -72,7 +66,7 @@ public class Main {
                         System.out.print("Você realmente deseja excluir o item de ID " + idRemover + "? (S/N): ");
                         String confirmacao = sc.nextLine();
                         if (confirmacao.equalsIgnoreCase("S")) {
-                            itemDao.deleteByID(idRemover);
+                            itemService.excluirItem(idRemover);
                         } else {
                             System.out.println("Operação de exclusão cancelada.");
                         }
@@ -88,7 +82,7 @@ public class Main {
                         int idAtualizar = sc.nextInt();
                         sc.nextLine();
 
-                        Item itemExistente = itemDao.getItemByID(idAtualizar);
+                        Item itemExistente = itemService.buscarItemPorID(idAtualizar);
                         if (itemExistente == null) {
                             System.out.println("ID não encontrado. Operação cancelada.");
                             break;
@@ -106,17 +100,12 @@ public class Main {
                         int novaQuantidade = sc.nextInt();
                         sc.nextLine();
 
-                        Item itemAtualizado = new Item();
-                        itemAtualizado.setId(idAtualizar);
-                        itemAtualizado.setNome(novoNome);
-                        itemAtualizado.setQuantidade(novaQuantidade);
-                        itemAtualizado.setDataCadastro(new Date());
-                        itemDao.update(itemAtualizado);
+                        itemService.atualizarItem(idAtualizar, novoNome, novaQuantidade);
                         break;
 
                     case 4:
                         System.out.println("[ Itens no Armazém ]");
-                        for (Item item : itemDao.getItens()) {
+                        for (Item item : itemService.listarItens()) {
                             System.out.printf("ID: %2d | Nome: %-15s | Quantidade: %-5d | Data de Cadastro: %s%n",
                                     item.getId(), item.getNome(), item.getQuantidade(), sdf.format(item.getDataCadastro()));
                         }
@@ -127,14 +116,14 @@ public class Main {
                         continuar = false;
                         System.out.println("[ FIM DO PROGRAMA ]");
                         continue;
-                        
+
                     default:
                         System.out.println("Opção inválida! Digite um número entre 1 e 5.");
                         break;
                 }
             } catch (Exception e) {
                 System.out.println("Erro: " + e.getMessage());
-                sc.nextLine(); // Limpa o buffer caso ocorra erro
+                sc.nextLine();
             }
 
             // Confirmação antes de continuar
